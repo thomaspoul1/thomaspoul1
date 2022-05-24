@@ -1,0 +1,180 @@
+@ECHO Off
+cd C:\Program Files\Oracle\VirtualBox
+echo [%date%] [%time%] user:%username% : Connexion au tool>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+CLS
+color c
+ECHO +=====[VM tools by Topma]======+
+ECHO 1.Projet SAE
+ECHO 2.Soon..
+ECHO +==============================+
+ECHO.
+CHOICE /C 12 /M "Choix de l'option: "
+IF ERRORLEVEL 2 GOTO End
+IF ERRORLEVEL 1 GOTO Second
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:Second
+cd C:\Program Files\Oracle\VirtualBoxVMs
+echo [%date%] [%time%] user:%username% + Connexion Gestion VM>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+color c
+CLS
+ECHO +======[VMTool by Topma]======+
+ECHO L. Liste des VM
+ECHO N. Ajouter une nouvelle VM
+ECHO S. Supprimer une VM
+ECHO D. Demarrer une VM
+ECHO A. Arreter une VM
+ECHO T. Logs/Data VM
+ECHO +=============================+
+set /p choix= Choix de l'option?
+if "%choix%"=="L" vboxmanage list vms
+if "%choix%"=="N" goto newVM
+if "%choix%"=="S" gOTO Suppression
+if "%choix%"=="D" goto Demarrage2
+if "%choix%"=="A" goto Fermeture
+if "%choix%"=="T" goto logs
+
+pause
+
+GOTO End
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:newVM
+CLS
+ECHO --------------------+[Creation de VM]+----------------------
+SET /p nom= Indiquer le nom de la VM : 
+if exist "C:\Users\Thomas\VirtualBoxVMs\%nom%" goto Check2
+SET chemin= "C:\Users\Thomas\VirtualBoxVMs"
+SET memory= 4096
+SET size= 68719
+set coeur= 2
+set vram= 256
+VBoxManage createvm --name "%nom%" --ostype "Ubuntu_64" --register --basefolder "C:\Users\Thomas\VirtualBoxVMs"
+::config mémoire
+VBoxManage modifyvm %nom% --memory %memory%
+VBoxManage modifyvm %nom% --ioapic on
+VBoxManage modifyvm %nom% --cpus %coeur%
+VBoxManage modifyvm %nom% --vram %vram%
+::config  NAT
+VBoxManage modifyvm %nom% --nic1 nat
+::espace disque
+VBoxManage createhd --filename C:\Users\Thomas\VirtualBoxVMs\%nom%\%nom%_DISK.vdi --size %size% --format VDI                     
+::Assignation d'un controlleur sata au disque hdd virtuel
+VBoxManage storagectl %nom% --name "SATA Controller" --add sata --controller IntelAhci       
+VBoxManage storageattach %nom% --storagectl "SATA Controller" --port 0 --device 0 --type hdd --medium  C:\Users\Thomas\VirtualBoxVMs\%nom%\%nom%_DISK.vdi
+::Configuration du lecteur dvd pour monter l'OS
+::VBoxManage storagectl %nom% --name "IDE Controller" --add ide --controller PIIX4       
+::VBoxManage storageattach %nom% --storagectl "IDE Controller" --port 1 --device 0 --type dvddrive --medium C:\Users\Thomas\VirtualBoxVMs\ubuntu.iso    
+VBoxManage setextradata %nom% creator %username%
+VBoxManage setextradata %nom% memory %memory%
+VBoxManage setextradata %nom% heart %coeur%
+VBoxManage setextradata %nom% size %size%
+VBoxManage setextradata %nom% date %date%
+VBoxManage setextradata %nom% heure %time% 
+
+echo [%date%] [%time%] user:%username% + Création de la VM %nom%{memory=%memory% ; size=%size% ; coeur=%coeur%;} >>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+echo L installation a ete effectue sans aucun probleme 
+VBoxManage unattended install %nom% --iso=C:\Users\Thomas\VirtualBoxVMs\ubuntu.iso --user=%username% --full-user-name="%user%" --password 1234 --install-additions --time-zone=UTC+1
+echo La configuration de la VM a ete effectue sans probleme
+:::::BARRE DE PROGRESSION, UNIQUEMENT DECORATIF
+color c
+:UP_BAR
+cls
+set /a FULL = FULL + 1
+set BAR=%BAR%Û
+set /a NB_BAR = NB_BAR + 2
+echo.
+echo.
+echo        Chargement .... %NB_BAR%%%
+echo      ******************************************************************************************************
+echo       %BAR%
+echo       %BAR%
+echo      ******************************************************************************************************
+echo.
+if %FULL%==50 goto :END_BAR
+goto :UP_BAR
+:END_BAR
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+goto Demarrage
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:Fermeture
+set /p VMFermeture=VM a eteindre: 
+VBoxManage controlvm "%VMFermeture%" poweroff
+echo [%date%] [%time%] user:%username% : Fermeture de %VMFermeture% >>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+GOTO End
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:Demarrage
+cd "%ProgramFiles%\Oracle\VirtualBox\" & Start VirtualBox.exe 
+::ouverture de vmbox pour visualisation
+echo [%date%] [%time%] user:%username% + Demarrage de %nom% >>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+VBoxManage startvm %Nom% --type headless 
+pause
+CLS
+GOTO End
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:Demarrage2
+set /p nom=VM a demarrer: 
+
+::ouverture de vmbox pour visualisation
+echo [%date%] [%time%] user:%username% + Demarrage de %nom% >>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+VBoxManage startvm %Nom% --type headless 
+cd "%ProgramFiles%\Oracle\VirtualBox\" & Start VirtualBox.exe 
+pause
+CLS
+GOTO End
+
+:Suppression
+set /p VmSupprime=VM a supprimer: 
+echo [%date%] [%time%] user:%username% + Suppression de %VmSupprime% >>C:\Users\Thomas\VirtualBoxVMs\logs.txt>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+
+VBoxManage unregistervm "%VmSupprime%" --delete
+rd C:\Users\Thomas\VirtualBoxVMs\%VmSupprime% /s
+pause
+GOTO End
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:Check
+set /p VmCheck=VM a check:
+echo [%date%] [%time%] user:%username% + Check de %VmCheck% >>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+if exist "C:\Users\Thomas\VirtualBoxVMs\%VmCheck%" goto CheckYes
+echo La VM n'esxiste pas et/ou n est pas dans le bon dossier
+echo [%date%] [%time%] user:%username% + ERROR: LA VM NEXISTE PAS/PAS DANS LE BON DOSSIER>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+pause
+goto CheckNo
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:CheckYes
+echo La VM existe deja
+echo [%date%] [%time%] user:%username% + VM EXISTANTE >> C:\Users\Thomas\VirtualBoxVMs\logs.txt
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+:Check2
+echo La VM existe deja
+pause
+goto End
+
+:Logs
+CLS
+color 4
+echo ==================================[Liste des VMs]==================================
+::mettre en chemin le fichier logs souhaiter qui se rempliera tout seul
+echo [%date%] [%time%] user:%username% + Verification>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+echo [%date%] [%time%] user:%username% + liste des VM>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+vboxmanage list vms
+vboxmanage list vms>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+echo =====================================================================================
+set /p VmLogs="VM a observer:"
+echo [%date%] [%time%] user:%username% à regardé l'historique de %VmLogs%>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+VBoxManage getextradata %VmLogs% enumerate
+VBoxManage getextradata %VmLogs% enumerate>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+pause
+goto End
+
+:::::::::::::::::::::::::::::::::::::::::::::
+::    :::     :::     :::    :   :::     ::::
+:::: :::: ::: ::: ::: ::: ::  :: ::: ::: ::::
+:::: ::::     ::: ::::::: :::::: ::: ::: ::::
+:::::::::::::::::::::::::::::::::::::::::::::
+
+:TOPMATOOL
+::::copier coller pour interface de logs (ne pas tenir compte)
+goto End
+echo [%date%] [%time%] user : %username% à >>C:\Users\Thomas\VirtualBoxVMs\logs.txt
+
+:End
