@@ -1,3 +1,9 @@
+::Ce TOOL permet de créer automatiquement des VM Ubuntu à partir de VirtualBox
+::Pensez à bien changer les chemins d'accès vers le répertoire ou' seront stocké les VM 
+
+
+
+
 @ECHO Off
 cd C:\Program Files\Oracle\VirtualBox
 echo [%date%] [%time%] user:%username% : Connexion au tool>>C:\Users\Thomas\VirtualBoxVMs\logs.txt
